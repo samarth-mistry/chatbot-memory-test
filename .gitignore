@@ -1,0 +1,90 @@
+# -------------------------
+# Python basics
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.pkl
+*.log
+*.tmp
+
+# Byte-compiled / optimized / DLL files
+*.so
+*.dll
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter & experiments
+.ipynb_checkpoints/
+*.ipynb
+
+# Local config
+.env
+*.env
+.env.*
+
+# IDE & Editor noise
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# GenAI / Chatbot specific
+# -------------------------
+
+# Model weights / checkpoints / embeddings
+models/
+checkpoints/
+artifacts/
+*.bin
+*.pt
+*.ckpt
+*.h5
+
+# Vector DB (e.g., FAISS or Chroma local storage)
+index/
+indexes/
+chroma/
+*.faiss
+*.npy
+
+# Conversation logs / NLU output dumps
+logs/
+logs/**/*.json
+*.trace
+*.jsonl
+
+# Temporary datasets or uploads
+data/tmp/
+uploads/
+cache/
+cache/
+
+# Local runtime outputs
+run/
+tmp/
+*.sqlite
+*.db
+
+# HuggingFace cache
+~/.cache/huggingface/
+huggingface/
+
+# OpenAI SDK cache (rare but safe)
+openai_cache/
