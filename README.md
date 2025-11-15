@@ -70,3 +70,29 @@ Use a tool like `curl` to test the full conversational flow:
 This completes all phases of the development assignment. The codebase is now structured, functional, and ready for review and deployment.
 
 Do you have any final questions or require any specific explanation of the code structure before concluding?
+
+## 🐳 Run, build and run with Docker Compose
+
+Here are the exact commands you requested for running manually, building the Docker image, and running with Docker Compose.
+
+1) Run locally (module entrypoint, works even if the `uvicorn` console script is not on PATH):
+
+```bash
+python -m uvicorn main:app --reload
+```
+
+2) Build the Docker image (from the repository root):
+
+```bash
+docker build -t chatbot-memory-test .
+```
+
+3) Bring up the service using Docker Compose (detached):
+
+```bash
+docker compose up -d
+```
+
+Notes:
+- If you want `docker compose` to rebuild the image before starting, run `docker compose up -d --build`.
+- If you prefer the `uvicorn` CLI command (instead of `python -m uvicorn`), ensure the Python scripts location (e.g. `~/.local/bin`) is on your PATH or install into an activated virtualenv.

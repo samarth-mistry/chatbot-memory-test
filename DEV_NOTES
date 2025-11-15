@@ -1,5 +1,6 @@
 python -m uvicorn main:app --reload
 docker build -t chatbot-memory-test .
+docker compose up -d
 
 Use the following curl commands to test the entire conversational flow, ensuring state is maintained (user_id: "final-test") and the guardrails/resumption logic works.
 
