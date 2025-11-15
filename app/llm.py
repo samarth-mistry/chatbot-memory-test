@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
@@ -35,4 +35,18 @@ class IntentRouterOutput(BaseModel):
     
 class FuzzyTimeParserOutput(BaseModel):
     """Structured output for parsing fuzzy time expressions."""
-    date_candidates: List[str] = Field(description="A list of specific dates (e.g., 'saturday', 'sunday', 'monday').")
+    date_candidates: List[str] = Field(
+        description="A list of specific, resolved date strings (e.g., 'Saturday, Nov 15', 'Sunday, Nov 16', 'Monday, Nov 17')."
+    )
+
+class SlotSelectionOutput(BaseModel):
+    """Structured output for selecting one item from a list."""
+    selected_value: str = Field(
+        description="The single candidate selected by the user from the provided list."
+    )
+
+class PartySizeOutput(BaseModel):
+    """Structured output for extracting party size."""
+    party_size: int = Field(
+        description="The number of people for the reservation."
+    )
