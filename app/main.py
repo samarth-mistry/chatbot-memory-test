@@ -10,7 +10,7 @@ from knowledge import KNOWLEDGE_LOADED
 
 from graph import compiled_graph, NLU_MODULE_INITIALIZED
 from knowledge import KNOWLEDGE_LOADED
-from guardrails import GUARDRAILS_ACTIVE # Renamed for clarity
+from guardrails import check_all_guardrails # Renamed for clarity
 
 # Initialize the compiled graph
 compiled_graph = get_compiled_graph()
@@ -28,7 +28,7 @@ def health_check():
     is_healthy = (
         NLU_MODULE_INITIALIZED and
         KNOWLEDGE_LOADED and
-        GUARDRAILS_ACTIVE
+        check_all_guardrails
     )
     
     if is_healthy:
@@ -38,7 +38,7 @@ def health_check():
         details = {
             "nlu_module": NLU_MODULE_INITIALIZED,
             "knowledge_base": KNOWLEDGE_LOADED,
-            "guardrails": GUARDRAILS_ACTIVE
+            "guardrails": check_all_guardrails
         }
         raise HTTPException(status_code=500, detail=f"Bot services not fully initialized: {details}")
     

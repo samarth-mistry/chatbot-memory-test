@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  chatbot:
+    image: chatbot-memory-test:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # Optional: if your app explicitly expects /app/.env:
+    volumes:
+      - ./.env:/app/.env

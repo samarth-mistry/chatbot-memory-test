@@ -9,7 +9,7 @@ from llm import (
     PartySizeOutput,        # <-- NEW
     LLM_INITIALIZED
 )
-from guardrails import check_llm_guardrails
+from guardrails import check_all_guardrails
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 
@@ -55,7 +55,7 @@ User's message: {user_message}
 )
 intent_router_chain = intent_prompt | llm | intent_parser
 
-# 2. Factual QA Chain (Unchanged)
+# 2. Factual QA Chain
 qa_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", "You are a helpful assistant. Answer the user's question concisely."),
@@ -116,13 +116,16 @@ party_parser = PydanticOutputParser(pydantic_object=PartySizeOutput)
 party_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", """
-You are an entity extractor. Your job is to extract the
-number of people (party size) from the user's message.
-Return *only* an integer.
-"four" -> 4
-"a table for 2" -> 2
+You are a **JSON-only entity extractor**. Your single job is to
+extract the party size (number of people) from the user's message
+and return it *only* in the required JSON format.
 
-{{format_instructions}}
+You MUST NOT include any conversational text, explanation, or markdown formatting
+outside of the single required JSON object.
+
+Example: "for four" -> {{"party_size": 4}}  <--- **FIXED**
+
+{format_instructions}
 """),
         ("human", "User's message: {user_message}")
     ]
@@ -133,12 +136,14 @@ party_size_chain = party_prompt | llm | party_parser
 # --- Define Graph Nodes (Updated) ---
 
 def check_guardrails_node(state: GraphState) -> GraphState:
-    # ... (unchanged from Phase 2) ...
+    """
+    First node: Check for adversarial or unethical input.
+    """
     print("---NODE: check_guardrails_node---")
-    error_msg = check_llm_guardrails(state['message'])
+    error_msg = check_all_guardrails(state['message'])
     if error_msg:
         state['response'] = error_msg
-        state['error_message'] = error_msg
+        state['error_message'] = error_msg # Signal to end
     return state
 
 def route_intent_node(state: GraphState) -> GraphState:
@@ -162,9 +167,32 @@ def route_intent_node(state: GraphState) -> GraphState:
     return state
 
 def handle_knowledge_node(state: GraphState) -> GraphState:
-    # ... (unchanged from Phase 2) ...
+    """
+    Handles a factual query by calling the LLM.
+    This replaces the 20-fact JSON.
+    """
     print("---NODE: handle_knowledge_node---")
-    # ... (logic for QA + resume) ...
+    message = state.get('message', '')
+    
+    # Call the LLM QA chain
+    try:
+        llm_response = qa_chain.invoke({"user_message": message})
+        fact = llm_response.content
+    except Exception as e:
+        print(f"Error in QA chain: {e}")
+        fact = "I'm sorry, I'm having trouble looking that up right now."
+    
+    # Use .get with a safe default to avoid KeyError
+    booking_state = state.get('booking_state', "idle")
+    last_question = state.get('last_question', "")
+    
+    # This is the "resume" logic
+    if booking_state not in [None, "idle", "complete"]:
+        state['response'] = f"{fact} Now, back to your reservation... {last_question}"
+    else:
+        state['response'] = fact
+        
+    state['intent'] = None # Clear intent
     return state
 
 # --- REWRITTEN BOOKING NODES ---
@@ -350,7 +378,9 @@ def handle_confirm_node(state: GraphState) -> GraphState:
     return state
 
 def handle_unknown_node(state: GraphState) -> GraphState:
-    # ... (unchanged) ...
+    """
+    Handles any message we don't understand.
+    """
     print("---NODE: handle_unknown_node---")
     state['response'] = "I'm sorry, I don't understand. Can you rephrase?"
     return state

@@ -1,0 +1,72 @@
+python -m uvicorn main:app --reload
+docker build -t chatbot-memory-test .
+
+Use the following curl commands to test the entire conversational flow, ensuring state is maintained (user_id: "final-test") and the guardrails/resumption logic works.
+
+Test Case 1: Start Booking & Clarification
+1. Fuzzy Time Input: Start the booking with an ambiguous date.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "I want to book a table this weekend or maybe Monday morning."}'
+Expected Output: Bot asks for clarification (e.g., "Saturday, Nov 15, Sunday, Nov 16, or Monday, Nov 17?").
+
+2. User Clarification: Resolve the ambiguity.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "Sunday, please."}'
+Expected Output: Bot confirms the date and asks for party size (e.g., "Great. How many people will be in your party on Sunday...?").
+
+3. Party Size: Provide the final slot value.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "For four people."}'
+Expected Output: Bot confirms all slots are filled and asks for final confirmation (e.g., "Perfect. Reservation for 4 on Sunday... Anything else you'd like?").
+
+Test Case 2: Mid-Conversation Topic Switch & Resume
+4. Topic Switch: Interrupt the confirmation flow with a factual query.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "By the way, what''s the capital of Australia?"}'
+Expected Output: Bot answers the question using the LLM knowledge, then seamlessly returns to the booking flow (e.g., "Canberra is the capital of Australia. Now, back to your reservation-table for four this Sunday. Should I confirm that?").
+
+Test Case 3: Guardrail Checks
+5. Contradiction Check: Test the contradiction guardrail.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "Is 30C freezing?"}'
+Expected Output: Bot identifies the contradiction (e.g., "No- 30°C is quite warm, not freezing."). Note: This is a stateless check and does not interrupt the booking state, which is still waiting for confirmation.
+
+6. Profanity Check: Test the ethical filter.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d "{\"user_id\": \"final-test\", \"message\": \"You're an idiot.\"}"
+
+Expected Output: Bot enforces the ethical filter (e.g., "Let's keep our conversation respectful, please.").
+
+Test Case 4: Final Confirmation
+7. Final Confirmation: Complete the booking.
+
+Bash
+
+curl -X POST "http://localhost:8000/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "final-test", "message": "Yes-please confirm the reservation."}'
+Expected Output: Bot confirms the booking (e.g., "Your table for four this Sunday is confirmed. We'll see you then!").
